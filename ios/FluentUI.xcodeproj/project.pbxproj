@@ -1838,6 +1838,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 53FC90F825673626008A06FD /* FluentUI_framework.xcconfig */;
 			buildSettings = {
+				EXCLUDED_ARCHS = "";
 			};
 			name = Dogfood;
 		};
@@ -1868,6 +1869,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 53FC90F825673626008A06FD /* FluentUI_framework.xcconfig */;
 			buildSettings = {
+				EXCLUDED_ARCHS = "";
 			};
 			name = Debug;
 		};
@@ -1875,6 +1877,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 53FC90F825673626008A06FD /* FluentUI_framework.xcconfig */;
 			buildSettings = {
+				EXCLUDED_ARCHS = "";
 			};
 			name = Release;
 		};
