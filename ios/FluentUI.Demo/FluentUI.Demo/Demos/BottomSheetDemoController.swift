@@ -67,7 +67,7 @@ class BottomSheetDemoController: UIViewController {
         view.heightAnchor.constraint(equalToConstant: headerHeight).isActive = true
 
         let label = UILabel()
-        label.text = "Sheet header view"
+        label.text = "Header view"
         label.font = .systemFont(ofSize: 24)
         label.translatesAutoresizingMaskIntoConstraints = false
 
