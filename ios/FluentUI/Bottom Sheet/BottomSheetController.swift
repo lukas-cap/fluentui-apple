@@ -155,10 +155,10 @@ public class BottomSheetController: UIViewController {
         view.addSubview(bottomSheetView)
         bottomSheetView.isHidden = isHidden
 
-        let overflowView = UIView()
-        overflowView.translatesAutoresizingMaskIntoConstraints = false
-        overflowView.backgroundColor = Colors.NavigationBar.background
-        view.addSubview(overflowView)
+//        let overflowView = UIView()
+//        overflowView.translatesAutoresizingMaskIntoConstraints = false
+//        overflowView.backgroundColor = Colors.NavigationBar.background
+//        view.addSubview(overflowView)
 
         view.addLayoutGuide(maxSheetHeightLayoutGuide)
         view.addLayoutGuide(preferredExpandedContentLayoutGuide)
@@ -178,10 +178,10 @@ public class BottomSheetController: UIViewController {
             bottomSheetView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomSheetView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bottomSheetView.heightAnchor.constraint(lessThanOrEqualTo: maxSheetHeightLayoutGuide.heightAnchor),
-            overflowView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            overflowView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            overflowView.heightAnchor.constraint(equalToConstant: Constants.Spring.overflowHeight),
-            overflowView.topAnchor.constraint(equalTo: bottomSheetView.bottomAnchor),
+//            overflowView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+//            overflowView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+//            overflowView.heightAnchor.constraint(equalToConstant: Constants.Spring.overflowHeight),
+//            overflowView.topAnchor.constraint(equalTo: bottomSheetView.bottomAnchor),
             bottomSheetOffsetConstraint
         ])
 
@@ -291,7 +291,26 @@ public class BottomSheetController: UIViewController {
     // MARK: - Gesture handling
 
     @objc private func handleResizingHandleViewTap(_ sender: UITapGestureRecognizer) {
-        isExpanded.toggle()
+//        isExpanded.toggle()
+
+        if presentedViewController != nil {
+            dismiss(animated: true)
+        } else {
+            let modalSheetVC = UIViewController()
+            modalSheetVC.view.addSubview(bottomSheetView)
+            modalSheetVC.transitioningDelegate = self
+
+            NSLayoutConstraint.activate([
+                bottomSheetView.leadingAnchor.constraint(equalTo: modalSheetVC.view.leadingAnchor),
+                bottomSheetView.topAnchor.constraint(equalTo: modalSheetVC.view.topAnchor),
+                bottomSheetView.trailingAnchor.constraint(equalTo: modalSheetVC.view.trailingAnchor),
+                bottomSheetView.bottomAnchor.constraint(equalTo: modalSheetVC.view.bottomAnchor)
+            ])
+
+            modalSheetVC.modalPresentationStyle = .custom
+            present(modalSheetVC, animated: true)
+        }
+
     }
 
     private func updateResizingHandleViewAccessibility() {
@@ -305,17 +324,17 @@ public class BottomSheetController: UIViewController {
     }
 
     private func updateExpandedContentAlpha() {
-        let transitionLength = Constants.expandedContentAlphaTransitionLength
-        let currentOffset = currentOffsetFromBottom
-        let collapsedOffset = offset(for: .collapsed)
-
-        var targetAlpha: CGFloat = 1.0
-        if currentOffset <= collapsedOffset {
-            targetAlpha = 0.0
-        } else if currentOffset > collapsedOffset && currentOffset < collapsedOffset + transitionLength {
-            targetAlpha = abs(currentOffset - collapsedOffset) / transitionLength
-        }
-        expandedContentView.alpha = targetAlpha
+//        let transitionLength = Constants.expandedContentAlphaTransitionLength
+//        let currentOffset = currentOffsetFromBottom
+//        let collapsedOffset = offset(for: .collapsed)
+//
+//        var targetAlpha: CGFloat = 1.0
+//        if currentOffset <= collapsedOffset {
+//            targetAlpha = 0.0
+//        } else if currentOffset > collapsedOffset && currentOffset < collapsedOffset + transitionLength {
+//            targetAlpha = abs(currentOffset - collapsedOffset) / transitionLength
+//        }
+//        expandedContentView.alpha = targetAlpha
     }
 
     private func updateDimmingViewAlpha() {
@@ -339,20 +358,20 @@ public class BottomSheetController: UIViewController {
     }
 
     @objc private func handlePan(_ sender: UIPanGestureRecognizer) {
-        switch sender.state {
-        case .began:
-            stopAnimationIfNeeded()
-            fallthrough
-        case .changed:
-            translateSheet(by: sender.translation(in: view))
-            sender.setTranslation(.zero, in: view)
-            updateExpandedContentAlpha()
-            updateDimmingViewAlpha()
-        case .ended, .cancelled, .failed:
-            completePan(with: sender.velocity(in: view).y)
-        default:
-            break
-        }
+//        switch sender.state {
+//        case .began:
+//            stopAnimationIfNeeded()
+//            fallthrough
+//        case .changed:
+//            translateSheet(by: sender.translation(in: view))
+//            sender.setTranslation(.zero, in: view)
+//            updateExpandedContentAlpha()
+//            updateDimmingViewAlpha()
+//        case .ended, .cancelled, .failed:
+//            completePan(with: sender.velocity(in: view).y)
+//        default:
+//            break
+//        }
     }
 
     private func translateSheet(by translationDelta: CGPoint) {
@@ -608,5 +627,20 @@ extension BottomSheetController: UIGestureRecognizerDelegate {
             shouldBegin = (scrolledToTop && panningDown) || !panInHostedScrollView
         }
         return shouldBegin
+    }
+}
+
+extension BottomSheetController: UIViewControllerTransitioningDelegate {
+    public func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
+        return BottomSheetPresentationController(presentedViewController: presented, presenting: presenting, preferredSheetHeight: bottomSheetView.frame.height)
+    }
+
+    public func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        let collapsedOffset = collapsedContentHeight + (isExpandable ? ResizingHandleView.height : 0.0) + view.safeAreaInsets.bottom
+        return BottomSheetExpansionInteractionController(isPresentation: true, collapsedOffset: collapsedOffset)
+    }
+
+    public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return BottomSheetExpansionInteractionController(isPresentation: false, collapsedOffset: 0)
     }
 }
