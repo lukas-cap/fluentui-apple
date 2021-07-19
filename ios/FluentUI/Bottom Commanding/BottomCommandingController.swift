@@ -121,6 +121,18 @@ open class BottomCommandingController: UIViewController {
         }
     }
 
+    /// Indicates if the sheet is expanded.
+    ///
+    /// If the current commanding UI style is not a sheet, setting this will have no effect.
+    @objc open var isSheetExpanded: Bool {
+        get {
+            return bottomSheetController?.isExpanded ?? false
+        }
+        set {
+            bottomSheetController?.isExpanded = newValue
+        }
+    }
+
     /// Indicates whether a more button is visible in the sheet style when `expandedListSections` is non-empty.
     /// Tapping the button will expand or collapse the sheet.
     @objc open var prefersSheetMoreButtonVisible: Bool = true {

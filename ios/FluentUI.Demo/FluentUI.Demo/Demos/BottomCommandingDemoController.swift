@@ -88,6 +88,7 @@ class BottomCommandingDemoController: UIViewController {
                 DemoItem(title: "Hero command isOn", type: .boolean, action: #selector(toggleHeroCommandOnOff)),
                 DemoItem(title: "Hero command isEnabled", type: .boolean, action: #selector(toggleHeroCommandEnabled), isOn: true),
                 DemoItem(title: "List command isEnabled", type: .boolean, action: #selector(toggleListCommandEnabled), isOn: true),
+                DemoItem(title: "Toggle isSheetExpanded", type: .action, action: #selector(toggleSheetExpanded)),
                 DemoItem(title: "Toggle boolean cells", type: .action, action: #selector(toggleBooleanCells)),
                 DemoItem(title: "Change hero command titles", type: .action, action: #selector(changeHeroCommandTitle)),
                 DemoItem(title: "Change hero command images", type: .action, action: #selector(changeHeroCommandIcon)),
@@ -168,6 +169,10 @@ class BottomCommandingDemoController: UIViewController {
             currentExpandedListSections[0].items[$0].selectedImage = listIconChanged ? homeSelectedImage : boldImage
         }
         listIconChanged.toggle()
+    }
+
+    @objc private func toggleSheetExpanded() {
+        bottomCommandingController?.isSheetExpanded.toggle()
     }
 
     @objc private func toggleBooleanCells() {
