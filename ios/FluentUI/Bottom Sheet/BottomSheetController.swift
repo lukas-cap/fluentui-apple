@@ -97,6 +97,8 @@ public class BottomSheetController: UIViewController {
         }
     }
 
+    @objc open var isFlexibleHeight: Bool = false
+
     /// Height of `headerContentView`.
     ///
     /// Setting this is required when the `headerContentView` is non-nil.
@@ -506,8 +508,20 @@ public class BottomSheetController: UIViewController {
         let availableWidth: CGFloat = view.frame.width
         let sheetWidth = max(shouldAlwaysFillWidth ? availableWidth : min(Constants.maxSheetWidth, availableWidth), Constants.minSheetWidth)
 
+////
+//        return CGRect(origin: CGPoint(x: (view.frame.width - sheetWidth) / 2, y: offset),
+//                      size: CGSize(width: sheetWidth, height: expandedSheetHeight))
+
+        let collapsedHeight = view.frame.maxY - self.offset(for: .collapsed)
+        let expandedHeight = view.frame.maxY - self.offset(for: .expanded)
+        let minHeight = isFlexibleHeight ? collapsedHeight : expandedHeight
+//        let collapsedOffset = self.offset(for: .collapsed)
+//        let newHeight = max(collapsedHeight, collapsedHeight + (collapsedOffset - offset))
+        let newHeight = max(minHeight, view.frame.maxY - offset)
+
+//        let newHeight = collapsedHeight
         return CGRect(origin: CGPoint(x: (view.frame.width - sheetWidth) / 2, y: offset),
-                      size: CGSize(width: sheetWidth, height: expandedSheetHeight))
+                      size: CGSize(width: sheetWidth, height: newHeight))
     }
 
     private func translationRubberBandFactor(for currentOffset: CGFloat) -> CGFloat {
@@ -578,14 +592,15 @@ public class BottomSheetController: UIViewController {
                                      interaction: BottomSheetInteraction = .noUserAction,
                                      shouldNotifyDelegate: Bool = true) -> UIViewPropertyAnimator {
         let targetVerticalOffset = offset(for: targetExpansionState)
-        let distanceToGo = abs(currentSheetVerticalOffset - targetVerticalOffset)
-        let springVelocity = min(abs(velocity / distanceToGo), Constants.Spring.maxInitialVelocity)
-        let damping: CGFloat = abs(velocity) > Constants.Spring.flickVelocityThreshold
-            ? Constants.Spring.oscillatingDampingRatio
-            : Constants.Spring.defaultDampingRatio
+        let distanceToGo = targetVerticalOffset - currentSheetVerticalOffset
+        let springVelocity = min(Constants.Spring.maxInitialVelocity, distanceToGo.sign == velocity.sign ? velocity / distanceToGo : 0)
 
-        let springParams = UISpringTimingParameters(dampingRatio: damping, initialVelocity: CGVector(dx: 0.0, dy: springVelocity))
-        let translationAnimator = UIViewPropertyAnimator(duration: Constants.Spring.animationDuration, timingParameters: springParams)
+        let springParams: UISpringTimingParameters = springVelocity != 0
+        ? UISpringTimingParameters(mass: 3, stiffness: 1000, damping: 90, initialVelocity: CGVector(dx: springVelocity, dy: springVelocity))
+        : UISpringTimingParameters(mass: 3, stiffness: 1000, damping: 500, initialVelocity: CGVector(dx: springVelocity, dy: springVelocity))
+
+        let translationAnimator = UIViewPropertyAnimator(duration: 0, timingParameters: springParams)
+        print(translationAnimator.duration)
 
         self.targetExpansionState = targetExpansionState
 
@@ -599,12 +614,16 @@ public class BottomSheetController: UIViewController {
         let originalExpansionState = currentExpansionState
 
         bottomSheetView.isHidden = false
+
+        view.layoutIfNeeded()
         translationAnimator.addAnimations { [weak self] in
             guard let strongSelf = self else {
                 return
             }
             strongSelf.bottomSheetView.frame = strongSelf.sheetFrame(offset: targetVerticalOffset)
+//            print(strongSelf.bottomSheetView.frame.maxY)
             strongSelf.view.layoutIfNeeded()
+//            strongSelf.expandedContentView.layoutIfNeeded()
         }
 
         let targetRelatedViewAlpha = targetExpansionState.relatedViewAlpha
@@ -766,10 +785,10 @@ public class BottomSheetController: UIViewController {
             static let oscillatingDampingRatio: CGFloat = 0.8
 
             // Swipes over this velocity get slight spring oscillation
-            static let flickVelocityThreshold: CGFloat = 800
+            static let flickVelocityThreshold: CGFloat = 0
 
             static let maxInitialVelocity: CGFloat = 40.0
-            static let animationDuration: TimeInterval = 0.4
+            static let animationDuration: TimeInterval = 1
 
             // Off-screen overflow that can be partially revealed during spring oscillation or rubber banding (dragging the sheet beyond limits)
             static let overflowHeight: CGFloat = 50.0

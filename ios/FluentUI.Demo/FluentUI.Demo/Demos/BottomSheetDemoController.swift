@@ -22,8 +22,10 @@ class BottomSheetDemoController: UIViewController {
         mainTableView = optionTableView
 
         let bottomSheetViewController = BottomSheetController(headerContentView: headerView, expandedContentView: personaListView)
-        bottomSheetViewController.hostedScrollView = personaListView
+//        bottomSheetViewController.hostedScrollView = personaListView
         bottomSheetViewController.headerContentHeight = BottomSheetDemoController.headerHeight
+        bottomSheetViewController.collapsedContentHeight = 200
+        bottomSheetViewController.shouldHideCollapsedContent = false
         bottomSheetViewController.delegate = self
 
         self.bottomSheetViewController = bottomSheetViewController
@@ -75,12 +77,27 @@ class BottomSheetDemoController: UIViewController {
         bottomSheetViewController?.preferredExpandedContentHeight = 400
     }
 
-    private let personaListView: PersonaListView = {
-        let personaListView = PersonaListView()
-        personaListView.personaList = samplePersonas
-        personaListView.backgroundColor = Colors.NavigationBar.background
-        personaListView.translatesAutoresizingMaskIntoConstraints = false
-        return personaListView
+    private let personaListView: UIView = {
+//        let personaListView = PersonaListView()
+//        personaListView.personaList = samplePersonas
+//        personaListView.backgroundColor = Colors.NavigationBar.background
+//        personaListView.translatesAutoresizingMaskIntoConstraints = false
+//        return personaListView
+
+        let view = UIView()
+        view.backgroundColor = .systemGray
+
+        let subview = UIView()
+        subview.backgroundColor = .systemPink
+        subview.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(subview)
+        NSLayoutConstraint.activate([
+            subview.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            subview.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            subview.heightAnchor.constraint(equalToConstant: 100),
+            subview.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        return view
     }()
 
     private let headerView: UIView = {
