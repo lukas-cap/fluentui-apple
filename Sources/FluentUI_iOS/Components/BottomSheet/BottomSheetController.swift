@@ -409,20 +409,18 @@ public class BottomSheetController: UIViewController, Shadowable, TokenizedContr
     ///   - animated: Indicates if the change should be animated. The default value is `true`.
     ///   - completion: Closure to be called when the state change completes.
     @objc public func presentSheet(expandedState: BottomSheetExpansionState, animated: Bool = true, completion: ((_ isFinished: Bool) -> Void)? = nil) {
-        let finishedState: BottomSheetExpansionState
-        let collapsedOrExpanded: BottomSheetExpansionState = supportsCollapsedState ? .collapsed : .expanded
-
-        switch expandedState {
-        case .collapsed:
-            finishedState = collapsedOrExpanded
-        case .expanded:
-            finishedState = isExpandable ? .expanded : collapsedOrExpanded
-        case .partial:
-            finishedState = isExpandable && supportsPartialState ? .partial : collapsedOrExpanded
-        // Safe fallback for any invalid target states
-        default:
-            finishedState = collapsedOrExpanded
-        }
+        let finishedState: BottomSheetExpansionState =
+            switch expandedState {
+            case .expanded where isExpandable:
+                .expanded
+            case .partial where isExpandable && supportsPartialState:
+                .partial
+            case .collapsed where supportsCollapsedState:
+                .collapsed
+            default:
+                // Requested state isn't supported; fall back to collapsed if available, otherwise expanded.
+                supportsCollapsedState ? .collapsed : .expanded
+            }
 
         if isViewLoaded {
             move(to: finishedState, animated: animated, allowUnhiding: true) { finalPosition in
@@ -601,7 +599,7 @@ public class BottomSheetController: UIViewController, Shadowable, TokenizedContr
                 bottomSheetView.frame = sheetFrame(offset: offset(for: .expanded))
                 handleCompletedStateChange(to: .expanded, interaction: .noUserAction)
             } else {
-            bottomSheetView.frame = sheetFrame(offset: offset(for: currentExpansionState))
+                bottomSheetView.frame = sheetFrame(offset: offset(for: currentExpansionState))
             }
             updateSheetLayoutGuideTopConstraint()
             updateExpandedContentAlpha()
@@ -1161,13 +1159,16 @@ public class BottomSheetController: UIViewController, Shadowable, TokenizedContr
                       shouldNotifyDelegate: Bool = true,
                       allowUnhiding: Bool = false,
                       completion: ((UIViewAnimatingPosition) -> Void)? = nil) {
+        guard targetExpansionState == .hidden || !isHiddenOrHiding || allowUnhiding else {
+            return
+        }
+
         var targetExpansionState = targetExpansionState
         if targetExpansionState == .partial && !supportsPartialState {
             targetExpansionState = currentExpansionState == .expanded ? .collapsed : .expanded
         }
-
-        guard targetExpansionState == .hidden || !isHiddenOrHiding || allowUnhiding else {
-            return
+        if targetExpansionState == .collapsed && !supportsCollapsedState {
+            targetExpansionState = .expanded
         }
 
         completeAnimationsIfNeeded()
