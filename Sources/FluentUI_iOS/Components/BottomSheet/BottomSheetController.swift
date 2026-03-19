@@ -596,8 +596,10 @@ public class BottomSheetController: UIViewController, Shadowable, TokenizedContr
                 || (currentExpansionState == .collapsed && !supportsCollapsedState)
             )
             if needsRepositionToExpanded {
+                delegate?.bottomSheetController?(self, willMoveTo: .expanded, interaction: .noUserAction)
+                currentExpansionState = .expanded
                 bottomSheetView.frame = sheetFrame(offset: offset(for: .expanded))
-                handleCompletedStateChange(to: .expanded, interaction: .noUserAction)
+                delegate?.bottomSheetController?(self, didMoveTo: .expanded, interaction: .noUserAction)
             } else {
                 bottomSheetView.frame = sheetFrame(offset: offset(for: currentExpansionState))
             }
